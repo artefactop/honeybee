@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/infinitystrip/honeybee.png?label=ready&title=Ready)](https://waffle.io/infinitystrip/honeybee)
 # honeybee
 
 (proof of concept)
