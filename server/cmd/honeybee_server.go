@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/gophergala/honeybee/server"
+	"github.com/infinitystrip/honeybee/server"
 )
 
-//TODO save data in DB
+//TODO save data in influxdb
 
 func main() {
 	nodes := make(map[string]string)

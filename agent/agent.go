@@ -1,92 +1,92 @@
 package agent
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/alicebob/procspy"
 	"github.com/golang/protobuf/proto"
-	"github.com/gophergala/honeybee/protobee"
+	"github.com/infinitystrip/honeybee/protobee"
+	"log"
 	"net"
 	"time"
 )
 
-type ConAux struct {
-	Transport     string
-	LocalAddress  string
-	LocalPort     uint32
-	RemoteAddress string
-	RemotePort    uint32
-	Pid           uint32
-	Name          string
-}
-
 func sendDataToDest(data []byte, dst *string) {
 	conn, err := net.Dial("tcp", *dst)
 	if err != nil {
-		fmt.Println("error", err)
+		log.Fatal("error", err)
 	}
 	n, err := conn.Write(data)
 	if err != nil {
-		fmt.Println("error", err)
+		log.Println("error", err)
 	}
-	fmt.Printf("Sent %d bytes\n", n)
+	log.Printf("Sent %d bytes\n", n)
 }
 
-func listener(c <-chan []byte, dst *string) {
+func listener(c <-chan *procspy.ConnIter, dst, apiKey, name *string) {
 	for {
-		msg := <-c
-		var conAuxSlice []ConAux
-		json.Unmarshal(msg, &conAuxSlice)
+		log.Println("Listen for new message")
+		connIter := <-c
 
-		fmt.Println("unmarshalled", conAuxSlice)
+		server := new(protobee.Server)
+		server.ApiKey = apiKey
+		server.Name = name
 
-		connections := new(protobee.Connections)
-		connections.Connection = []*protobee.Connection{}
-
-		for _, value := range conAuxSlice {
-			con := new(protobee.Connection)
-			con.Transport = proto.String(value.Transport)
-			con.LocalAddress = proto.String(value.LocalAddress)
-			con.LocalPort = proto.Uint32(value.LocalPort)
-			con.RemoteAddress = proto.String(value.RemoteAddress)
-			con.RemotePort = proto.Uint32(value.RemotePort)
-			con.Pid = proto.Uint32(value.Pid)
-			con.Name = proto.String(value.Name)
-			connections.Connection = append(connections.Connection, con)
-		}
-		//connections
-		pb, err := proto.Marshal(connections)
+		err := copy(connIter, &server.Connections)
 		if err != nil {
-			fmt.Println("error", err)
+			log.Println("error", err)
+		}
+
+		//connections
+		pb, err := proto.Marshal(server)
+		if err != nil {
+			log.Println("error", err)
 		}
 		sendDataToDest(pb, dst)
-		//time.Sleep(time.Second * 2)
 	}
 }
 
-func startMonitor(channel chan<- []byte, scanningSeconds int64) {
+func copy(connIter *procspy.ConnIter, connections *[]*protobee.Connection) error {
+
+	conn := (*connIter).Next()
+
+	for conn != nil {
+		log.Println(". connection: ", conn)
+		protoConn := new(protobee.Connection)
+		protoConn.Transport = proto.String(conn.Transport)
+		protoConn.LocalAddress = proto.String(conn.LocalAddress.String())
+		protoConn.LocalPort = proto.Uint32(uint32(conn.LocalPort))
+		protoConn.RemoteAddress = proto.String(conn.RemoteAddress.String())
+		protoConn.RemotePort = proto.Uint32(uint32(conn.RemotePort))
+		protoConn.Pid = proto.Uint32(uint32(conn.PID))
+		protoConn.Name = proto.String(conn.Name)
+
+		(*connections) = append((*connections), protoConn)
+		conn = (*connIter).Next()
+	}
+
+	return nil
+}
+
+func startMonitor(channel chan<- *procspy.ConnIter, scanningSeconds int64) {
 	for {
 		cs, err := procspy.Connections(true)
 		if err != nil {
 			panic(err)
 		}
-		js, err := json.Marshal(cs)
-		if err != nil {
-			fmt.Println(err)
-		}
-		channel <- js
+		channel <- &cs
 		time.Sleep(time.Second * time.Duration(scanningSeconds))
 	}
 
 }
 
 func Run() {
-	fmt.Println("Start agent")
+	log.Println("Start agent")
 
-	var c chan []byte = make(chan []byte)
+	var c chan *procspy.ConnIter = make(chan *procspy.ConnIter)
 
 	dst := "127.0.0.1:2110"
-	go listener(c, &dst)
+	apiKey := "key"
+	name := "name"
+	go listener(c, &dst, &apiKey, &name)
 
 	startMonitor(c, 1)
 }

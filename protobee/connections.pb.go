@@ -9,7 +9,7 @@ It is generated from these files:
 	protobee/connections.proto
 
 It has these top-level messages:
-	Connections
+	Server
 	Connection
 */
 package protobee
@@ -21,18 +21,34 @@ import math "math"
 var _ = proto.Marshal
 var _ = math.Inf
 
-type Connections struct {
-	Connection       []*Connection `protobuf:"bytes,1,rep,name=connection" json:"connection,omitempty"`
+type Server struct {
+	ApiKey           *string       `protobuf:"bytes,1,req,name=api_key" json:"api_key,omitempty"`
+	Name             *string       `protobuf:"bytes,2,req,name=name" json:"name,omitempty"`
+	Connections      []*Connection `protobuf:"bytes,3,rep,name=connections" json:"connections,omitempty"`
 	XXX_unrecognized []byte        `json:"-"`
 }
 
-func (m *Connections) Reset()         { *m = Connections{} }
-func (m *Connections) String() string { return proto.CompactTextString(m) }
-func (*Connections) ProtoMessage()    {}
+func (m *Server) Reset()         { *m = Server{} }
+func (m *Server) String() string { return proto.CompactTextString(m) }
+func (*Server) ProtoMessage()    {}
 
-func (m *Connections) GetConnection() []*Connection {
+func (m *Server) GetApiKey() string {
+	if m != nil && m.ApiKey != nil {
+		return *m.ApiKey
+	}
+	return ""
+}
+
+func (m *Server) GetName() string {
+	if m != nil && m.Name != nil {
+		return *m.Name
+	}
+	return ""
+}
+
+func (m *Server) GetConnections() []*Connection {
 	if m != nil {
-		return m.Connection
+		return m.Connections
 	}
 	return nil
 }

@@ -1,8 +1,10 @@
 package protobee;
 
 
-message Connections {
-    repeated Connection connection = 1;
+message Server {
+	required string api_key         = 1;
+	required string name            = 2;
+    repeated Connection connections = 3;
 }
 
 message Connection {

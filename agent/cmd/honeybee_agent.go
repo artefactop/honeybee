@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/gophergala/honeybee/agent"
+	"github.com/infinitystrip/honeybee/agent"
 )
 
 func main() {

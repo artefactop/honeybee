@@ -3,11 +3,11 @@ package server
 import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
-	"github.com/gophergala/honeybee/protobee"
+	"github.com/infinitystrip/honeybee/protobee"
 	"net"
 )
 
-func handleProtoClient(conn net.Conn, c chan *protobee.Connections) {
+func handleProtoClient(conn net.Conn, c chan *protobee.Server) {
 	fmt.Println("Connection established")
 	//Close the connection when the function exits
 	defer conn.Close()
@@ -22,7 +22,7 @@ func handleProtoClient(conn net.Conn, c chan *protobee.Connections) {
 
 	fmt.Println("Decoding Protobuf message")
 	//Create an struct pointer of type ProtobufTest.TestMessage struct
-	protodata := new(protobee.Connections)
+	protodata := new(protobee.Server)
 	//Convert all the data retrieved into the ProtobufTest.TestMessage struct type
 	err = proto.Unmarshal(data[0:n], protodata)
 	if err != nil {
@@ -52,11 +52,11 @@ func updateValues(connections []*protobee.Connection, nodes *map[string]string, 
 
 func ListenPB(nodes *map[string]string, edges *map[string][]string) {
 	fmt.Println("listen for pb packets")
-	c := make(chan *protobee.Connections)
+	c := make(chan *protobee.Server)
 	go func() {
 		for {
 			message := <-c
-			connections := message.GetConnection()
+			connections := message.GetConnections()
 			updateValues(connections, nodes, edges)
 		}
 
