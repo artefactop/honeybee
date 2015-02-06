@@ -6,6 +6,7 @@ import (
 	"github.com/infinitystrip/honeybee/protobee"
 	"log"
 	"net"
+	"os"
 	"time"
 )
 
@@ -21,22 +22,26 @@ func sendDataToDest(data []byte, dst *string) {
 	log.Printf("Sent %d bytes\n", n)
 }
 
-func listener(c <-chan *procspy.ConnIter, dst, apiKey, name *string) {
+func listener(c <-chan *procspy.ConnIter, dst, apiKey, label *string) {
 	for {
 		log.Println("Listen for new message")
 		connIter := <-c
 
+		protobeeMsg := new(protobee.Message)
 		server := new(protobee.Server)
-		server.ApiKey = apiKey
-		server.Name = name
+		hostname, _ := os.Hostname()
+		server.Hostname = &hostname
+		server.Label = label
 
 		err := copy(connIter, &server.Connections)
 		if err != nil {
 			log.Println("error", err)
 		}
 
+		protobeeMsg.Type = protobee.Message_SERVER.Enum()
+		protobeeMsg.Server = server
 		//connections
-		pb, err := proto.Marshal(server)
+		pb, err := proto.Marshal(protobeeMsg)
 		if err != nil {
 			log.Println("error", err)
 		}
@@ -78,6 +83,21 @@ func startMonitor(channel chan<- *procspy.ConnIter, scanningSeconds int64) {
 
 }
 
+func sendSystemInfo(dst *string) {
+	systemInfo, _ := Collect()
+	log.Println("SystemInfo", systemInfo)
+	protobeeMsg := new(protobee.Message)
+
+	protobeeMsg.Type = protobee.Message_SYSTEM_INFO.Enum()
+	protobeeMsg.SystemInfo = systemInfo
+	//connections
+	pb, err := proto.Marshal(protobeeMsg)
+	if err != nil {
+		log.Println("error", err)
+	}
+	sendDataToDest(pb, dst)
+}
+
 func Run() {
 	log.Println("Start agent")
 
@@ -86,6 +106,9 @@ func Run() {
 	dst := "127.0.0.1:2110"
 	apiKey := "key"
 	name := "name"
+
+	sendSystemInfo(&dst)
+
 	go listener(c, &dst, &apiKey, &name)
 
 	startMonitor(c, 1)

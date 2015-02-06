@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/infinitystrip/honeybee/protobee"
+	"log"
 	"net"
 )
 
@@ -22,14 +23,17 @@ func handleProtoClient(conn net.Conn, c chan *protobee.Server) {
 
 	fmt.Println("Decoding Protobuf message")
 	//Create an struct pointer of type ProtobufTest.TestMessage struct
-	protodata := new(protobee.Server)
+	protodata := new(protobee.Message)
 	//Convert all the data retrieved into the ProtobufTest.TestMessage struct type
 	err = proto.Unmarshal(data[0:n], protodata)
 	if err != nil {
 		fmt.Println("error", err)
 	}
-	//Push the protobuf message into a channel
-	c <- protodata
+	log.Println("protodata", protodata)
+	if protodata.GetType() == protobee.Message_SERVER {
+		//Push the protobuf message into a channel
+		c <- protodata.GetServer()
+	}
 }
 
 func updateValues(connections []*protobee.Connection, nodes *map[string]string, edges *map[string][]string) {
