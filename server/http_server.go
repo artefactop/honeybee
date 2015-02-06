@@ -33,6 +33,8 @@ var (
 	}
 )
 
+//do not use global variables https://medium.com/@benbjohnson/structuring-applications-in-go-3b04be4ff091
+
 func Run(nodes *map[string]string, edges *map[string][]string) {
 	mux := http.NewServeMux()
 
