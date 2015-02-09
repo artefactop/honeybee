@@ -14,7 +14,7 @@ It has these top-level messages:
 	Connection
 	SystemInfo
 	Cpu
-	Filesystem
+	FileSystem
 	Memory
 	Network
 	Platform
@@ -190,12 +190,12 @@ func (m *Connection) GetName() string {
 }
 
 type SystemInfo struct {
-	Cpu              *Cpu        `protobuf:"bytes,1,req,name=cpu" json:"cpu,omitempty"`
-	Filesystem       *Filesystem `protobuf:"bytes,2,req,name=filesystem" json:"filesystem,omitempty"`
-	Memory           *Memory     `protobuf:"bytes,3,req,name=memory" json:"memory,omitempty"`
-	Network          *Network    `protobuf:"bytes,4,req,name=network" json:"network,omitempty"`
-	Platform         *Platform   `protobuf:"bytes,5,req,name=platform" json:"platform,omitempty"`
-	XXX_unrecognized []byte      `json:"-"`
+	Cpu              *Cpu          `protobuf:"bytes,1,req,name=cpu" json:"cpu,omitempty"`
+	FileSystems      []*FileSystem `protobuf:"bytes,2,rep,name=file_systems" json:"file_systems,omitempty"`
+	Memory           *Memory       `protobuf:"bytes,3,req,name=memory" json:"memory,omitempty"`
+	Networks         []*Network    `protobuf:"bytes,4,rep,name=networks" json:"networks,omitempty"`
+	Platform         *Platform     `protobuf:"bytes,5,req,name=platform" json:"platform,omitempty"`
+	XXX_unrecognized []byte        `json:"-"`
 }
 
 func (m *SystemInfo) Reset()         { *m = SystemInfo{} }
@@ -209,9 +209,9 @@ func (m *SystemInfo) GetCpu() *Cpu {
 	return nil
 }
 
-func (m *SystemInfo) GetFilesystem() *Filesystem {
+func (m *SystemInfo) GetFileSystems() []*FileSystem {
 	if m != nil {
-		return m.Filesystem
+		return m.FileSystems
 	}
 	return nil
 }
@@ -223,9 +223,9 @@ func (m *SystemInfo) GetMemory() *Memory {
 	return nil
 }
 
-func (m *SystemInfo) GetNetwork() *Network {
+func (m *SystemInfo) GetNetworks() []*Network {
 	if m != nil {
-		return m.Network
+		return m.Networks
 	}
 	return nil
 }
@@ -301,32 +301,32 @@ func (m *Cpu) GetVendorId() string {
 	return ""
 }
 
-type Filesystem struct {
+type FileSystem struct {
 	KbSize           *uint32 `protobuf:"varint,1,req,name=kb_size" json:"kb_size,omitempty"`
 	MountedOn        *string `protobuf:"bytes,2,req,name=mounted_on" json:"mounted_on,omitempty"`
 	Name             *string `protobuf:"bytes,3,req,name=name" json:"name,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
-func (m *Filesystem) Reset()         { *m = Filesystem{} }
-func (m *Filesystem) String() string { return proto.CompactTextString(m) }
-func (*Filesystem) ProtoMessage()    {}
+func (m *FileSystem) Reset()         { *m = FileSystem{} }
+func (m *FileSystem) String() string { return proto.CompactTextString(m) }
+func (*FileSystem) ProtoMessage()    {}
 
-func (m *Filesystem) GetKbSize() uint32 {
+func (m *FileSystem) GetKbSize() uint32 {
 	if m != nil && m.KbSize != nil {
 		return *m.KbSize
 	}
 	return 0
 }
 
-func (m *Filesystem) GetMountedOn() string {
+func (m *FileSystem) GetMountedOn() string {
 	if m != nil && m.MountedOn != nil {
 		return *m.MountedOn
 	}
 	return ""
 }
 
-func (m *Filesystem) GetName() string {
+func (m *FileSystem) GetName() string {
 	if m != nil && m.Name != nil {
 		return *m.Name
 	}
@@ -358,10 +358,10 @@ func (m *Memory) GetTotal() uint32 {
 }
 
 type Network struct {
-	MacAddress       *string  `protobuf:"bytes,1,req,name=mac_address" json:"mac_address,omitempty"`
-	IpAddress        []string `protobuf:"bytes,2,rep,name=ip_address" json:"ip_address,omitempty"`
-	IpAddressv6      []string `protobuf:"bytes,3,rep,name=ip_addressv6" json:"ip_addressv6,omitempty"`
-	XXX_unrecognized []byte   `json:"-"`
+	MacAddress       *string `protobuf:"bytes,1,req,name=mac_address" json:"mac_address,omitempty"`
+	IpAddress        *string `protobuf:"bytes,2,req,name=ip_address" json:"ip_address,omitempty"`
+	IpAddressV6      *string `protobuf:"bytes,3,req,name=ip_address_v6" json:"ip_address_v6,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
 }
 
 func (m *Network) Reset()         { *m = Network{} }
@@ -375,18 +375,18 @@ func (m *Network) GetMacAddress() string {
 	return ""
 }
 
-func (m *Network) GetIpAddress() []string {
-	if m != nil {
-		return m.IpAddress
+func (m *Network) GetIpAddress() string {
+	if m != nil && m.IpAddress != nil {
+		return *m.IpAddress
 	}
-	return nil
+	return ""
 }
 
-func (m *Network) GetIpAddressv6() []string {
-	if m != nil {
-		return m.IpAddressv6
+func (m *Network) GetIpAddressV6() string {
+	if m != nil && m.IpAddressV6 != nil {
+		return *m.IpAddressV6
 	}
-	return nil
+	return ""
 }
 
 type Platform struct {
@@ -395,8 +395,7 @@ type Platform struct {
 	KernelRelease    *string `protobuf:"bytes,3,req,name=kernel_release" json:"kernel_release,omitempty"`
 	Machine          *string `protobuf:"bytes,4,req,name=machine" json:"machine,omitempty"`
 	Processor        *string `protobuf:"bytes,5,req,name=processor" json:"processor,omitempty"`
-	HardwarePlatform *string `protobuf:"bytes,6,req,name=hardware_platform" json:"hardware_platform,omitempty"`
-	Os               *string `protobuf:"bytes,7,req,name=os" json:"os,omitempty"`
+	Os               *string `protobuf:"bytes,6,req,name=os" json:"os,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
@@ -435,13 +434,6 @@ func (m *Platform) GetMachine() string {
 func (m *Platform) GetProcessor() string {
 	if m != nil && m.Processor != nil {
 		return *m.Processor
-	}
-	return ""
-}
-
-func (m *Platform) GetHardwarePlatform() string {
-	if m != nil && m.HardwarePlatform != nil {
-		return *m.HardwarePlatform
 	}
 	return ""
 }

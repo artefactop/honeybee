@@ -42,6 +42,7 @@ func Collect() (systemInfo *protobee.SystemInfo, err error) {
 			log.Printf("[%s] %s", collector.Name(), err)
 			continue
 		}
+		log.Println("collector:", c)
 		switch collector.Name() {
 		case "cpu":
 			cpu := c.(map[string]string)
@@ -54,6 +55,49 @@ func Collect() (systemInfo *protobee.SystemInfo, err error) {
 			systemInfo.Cpu.Stepping = mapAtoi(cpu["stepping"])
 			systemInfo.Cpu.ModelName = proto.String(cpu["model_name"])
 			systemInfo.Cpu.VendorId = proto.String(cpu["vendor_id"])
+		case "filesystem":
+			sliceFs := c.([]interface{})
+
+			for _, v := range sliceFs {
+				fs := v.(map[string]string)
+				protoFs := new(protobee.FileSystem)
+
+				protoFs.Name = proto.String(fs["name"])
+				protoFs.KbSize = mapAtoi(fs["kb_size"])
+				protoFs.MountedOn = proto.String(fs["mounted_on"])
+
+				systemInfo.FileSystems = append(systemInfo.FileSystems, protoFs)
+			}
+		case "memory":
+			mem := c.(map[string]string)
+			log.Println("mem", mem)
+			systemInfo.Memory = new(protobee.Memory)
+
+			systemInfo.Memory.SwapTotal = proto.String(mem["swap_total"])
+			systemInfo.Memory.Total = mapAtoi(mem["total"]) //use uint64
+		case "network":
+			net := c.(map[string]interface{}) //TODO get all network interfaces
+			log.Println("net", net)
+
+			protoNet := new(protobee.Network)
+			protoNet.MacAddress = proto.String(net["macaddress"].(string))
+			protoNet.IpAddress = proto.String(net["ipaddress"].(string))
+			protoNet.IpAddressV6 = proto.String(net["ipaddressv6"].(string))
+
+			systemInfo.Networks = append(systemInfo.Networks, protoNet)
+
+		case "platform":
+			platform := c.(map[string]interface{})
+			log.Println("platform", platform)
+			systemInfo.Platform = new(protobee.Platform)
+
+			systemInfo.Platform.Hostname = proto.String(platform["hostname"].(string))
+			systemInfo.Platform.KernelName = proto.String(platform["kernel_name"].(string))
+			systemInfo.Platform.KernelRelease = proto.String(platform["kernel_release"].(string))
+			systemInfo.Platform.Machine = proto.String(platform["machine"].(string))
+			systemInfo.Platform.Processor = proto.String(platform["processor"].(string))
+			systemInfo.Platform.Os = proto.String(platform["os"].(string))
+
 		default:
 			log.Println("collector", c)
 		}

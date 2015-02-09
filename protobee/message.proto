@@ -40,9 +40,9 @@ message Connection {
 
 message SystemInfo {
 	required Cpu cpu = 1;
-	required Filesystem filesystem = 2;
+	repeated FileSystem file_systems = 2;
 	required Memory memory = 3;
-	required Network network = 4;
+	repeated Network networks = 4;
 	required Platform platform = 5;
 }
 
@@ -56,7 +56,7 @@ message Cpu {
 	required string vendor_id =7;
 }
 
-message Filesystem {
+message FileSystem {
 	required uint32 kb_size =1;
 	required string mounted_on =2;
 	required string name =3;	
@@ -69,8 +69,8 @@ message Memory{
 
 message Network{
 	required string mac_address = 1;
-	repeated string ip_address =2;
-	repeated string ip_addressv6 =3;
+	required string ip_address = 2;
+	required string ip_address_v6 = 3;
 }
 
 message Platform{
@@ -79,6 +79,5 @@ message Platform{
 	required string kernel_release = 3;
 	required string machine =4;
 	required string processor = 5;
-	required string hardware_platform = 6;
-	required string os = 7;
+	required string os = 6;
 }
